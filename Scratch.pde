@@ -1,3 +1,5 @@
+PImage img1;
+Cat cat;
 Value v;
 If_else f;
 Forloop l;
@@ -8,18 +10,20 @@ float by = 10;
 //float xOffset = 0.0; 
 //float yOffset = 0.0; 
 int boxSize = 75;
+HashMap<String, String> values = new HashMap<String, String>();
 ArrayList<Tree> tree = new ArrayList<Tree>();
-Tree selec,next,last;
+Tree selec,next,last,menu;
 int position_x,position_y,mouse_x,mouse_y,text_count = 1;
 
 void setup(){
-  size(1200,800);
+  size(800,800);
   frameRate(60);
   background(255);
   textSize(15);
+  cat = new Cat(60);
   redraw();
   ///create oj
-  v = new Value(boxSize);
+  //v = new Value(boxSize);
   f = new If_else(boxSize);
   l = new Forloop(boxSize);
   
@@ -41,9 +45,10 @@ void draw(){
       } 
     }
   }
-  v.drawValue(bx,by); 
+  //v.drawValue(bx,by); 
   f.drawIf_else(bx,by);
   l.drawForloop(bx,by);
+  
   //delete botton
   fill(#B22222);
   rect(500,770,300,30);
@@ -55,21 +60,49 @@ void draw(){
   rect(0,0,width/5,height);
   line(0,height/3,width/5,height/3);
   line(0,height*2/3,width/5,height*2/3);
+  
+  fill(46, 134, 193);
+  rect(10,20,120, 30);
+  textSize(20);
+  fill(255);
+  text("Value", 40,40);
+  
+  fill(46, 134, 193);
+  rect(10,100,120, 30);
+  textSize(20);
+  fill(255);
+  text("Move To ", 25,122);
+  
+  fill(46, 134, 193);
+  rect(10,200,120, 30);
+  textSize(20);
+  fill(255);
+  text("Run ", 50,222);
+  
   for (int i = 0; i < tree.size(); i++) {
     Tree sel = tree.get(i);
     sel.drawTree();
   }
+  cat.draws();
   if (selec != null)selec.drawTree();
-}
+    if (menu != null) {
+    menu.drawMenu();
+    }
+  }
 
 void mousePressed() {
-  for (int i = 0; i < tree.size(); i++) {
-    Tree sel = tree.get(i);
-    sel = sel.positionMouse(mouseX,mouseY);
-    if (sel != null) {
-      selec = sel;
-      if (tree.indexOf(sel) == -1) {
-        tree.add(sel);
+  if (menu != null) {
+      menu = null;
+    }
+    //redraw();
+    if (mouseButton == LEFT) {
+      for (int i = 0; i < tree.size(); i++) {
+        Tree sel = tree.get(i);
+        sel = sel.positionMouse(mouseX,mouseY);
+        if (sel != null) {
+        selec = sel;
+        if (tree.indexOf(sel) == -1) {
+          tree.add(sel);
       }
       position_x = sel.posx;
       position_y = sel.posy;
@@ -79,11 +112,23 @@ void mousePressed() {
     }
   }
      if (mouseY < 50 && mouseX < 100) {
-        Tree nextchild = new Tree(); 
+        Value nextchild = new Value(); 
         tree.add(nextchild);
-        nextchild.textBox = "Value " + text_count;
+        nextchild.setName("Value = 10 ");
+        nextchild.setValue("10");
         text_count++;
         selec = nextchild;      
+     }
+     else if (mouseY < 130 && mouseY > 70 && mouseX <100){
+        Tree nextchild = new Move(); 
+        tree.add(nextchild);
+        selec = nextchild; 
+     }
+     else if (mouseY < 260 && mouseY > 200 && mouseX <100){
+        Tree nextchild = new Run(); 
+        tree.add(nextchild);
+        text_count++;
+        selec = nextchild; 
      }
      else if (mouseY < 310 && mouseY > 260 && mouseX <100){
          Tree nextchild = new Tree(); 
@@ -96,16 +141,26 @@ void mousePressed() {
          tree.add(nextchild);
          nextchild.textBox = "foor-loop ";
          selec = nextchild;  
+       }
+      //redraw();
+       } else if (mouseButton == RIGHT) {
+      if (menu == null) {
+        for (int i = 0; i < tree.size(); i++) {
+          Tree sel = tree.get(i);
+
+          sel = sel.getClass(mouseX, mouseY,false);
+          if (sel != null) {
+
+            if (sel.menu()) {
+              menu = sel;
+            }            
+         
+            return;
+          }
+        }
+      }
     }
   }
-
-//void mouseDragged() {
-//  if(locked) {
-//    bx = mouseX-xOffset; 
-//    by = mouseY-yOffset; 
-//    fill(255);
-//  }
-//}
 
 void mouseReleased() {
   if ( selec != null) {
@@ -137,9 +192,16 @@ void checktouch() {
     Tree sel = tree.get(i);
     sel = sel.positionMouse(selec);
     if (sel != null) {
+      if (next != null) {
+        next.input = false;
+      }
       next = sel;
       next.input = true;
       return;
     }
+  }
+  if (next != null) {
+    next.input = false;
+    next = null;
   }
 }
